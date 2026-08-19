@@ -113,7 +113,7 @@ function mirror(spr) {
   x.translate(spr.width, 0); x.scale(-1, 1); x.drawImage(spr, 0, 0);
   return c;
 }
-const MPAL = { h: '#ffd12a', d: '#c79a00', l: '#fff7d0', s: '#ffd9b0', e: '#20242e', b: '#33d6ff', B: '#1a7fa8', k: '#232a38', K: '#39445a', g: '#8fa8c0' };
+const MPAL = { h: '#ffd12a', d: '#c79a00', l: '#fff7d0', s: '#ffd9b0', e: '#20242e', b: '#4f7fb5', B: '#35597f', k: '#2e2620', K: '#4a3d30', g: '#b08d5e' };
 const OTTO = {
   stand: [
     '....hhhhh...', '...hhhhhhh..', '...hdhhhll..', '...ssssss...', '...sesses...', '...ssssss...',
@@ -160,7 +160,7 @@ const CAVES = [
     },
   },
   {
-    name: 'BOULDER ALLEY', rim: '#ffb020', hue: 35, seed: 202,
+    name: 'BOULDER ALLEY', rim: '#3ee08a', hue: 150, seed: 202,
     rock: 0.21, gem: 0.06, quotaFrac: 0.55, time: 95,
     start: [2, 12], exit: [41, 2], enemies: [['f', 14, 6, 0], ['f', 30, 18, 2], ['f', 22, 12, 1]],
     feature: g => {
@@ -173,7 +173,7 @@ const CAVES = [
     },
   },
   {
-    name: 'BUTTERFLY VAULT', rim: '#aaff4d', hue: 95, seed: 303,
+    name: 'BUTTERFLY VAULT', rim: '#ffd84a', hue: 46, seed: 303,
     rock: 0.19, gem: 0.045, quotaFrac: 0.62, time: 110,
     start: [2, 2], exit: [2, 23], enemies: [['b', 19, 11, 1], ['b', 25, 15, 3], ['f', 33, 21, 0]],
     feature: g => {
@@ -190,7 +190,7 @@ const CAVES = [
     },
   },
   {
-    name: 'THE MAGIC MAZE', rim: '#b48cff', hue: 265, seed: 404,
+    name: 'THE MAGIC MAZE', rim: '#b366ff', hue: 270, seed: 404,
     rock: 0.13, gem: 0.06, quotaFrac: 0.65, time: 110,
     start: [2, 2], exit: [41, 23], enemies: [['f', 21, 13, 0], ['f', 9, 19, 1], ['f', 35, 7, 2], ['f', 33, 21, 3]],
     feature: g => {
@@ -206,7 +206,7 @@ const CAVES = [
     },
   },
   {
-    name: 'CRUSH DEPTH', rim: '#ff8c42', hue: 25, seed: 505,
+    name: 'CRUSH DEPTH', rim: '#45e0d2', hue: 174, seed: 505,
     rock: 0.25, gem: 0.07, quotaFrac: 0.66, time: 120,
     start: [21, 2], exit: [21, 23], enemies: [['b', 8, 8, 1], ['b', 36, 18, 3], ['f', 8, 18, 0], ['f', 36, 8, 2], ['f', 21, 15, 1]],
     feature: g => {
@@ -463,7 +463,7 @@ function collectGem(x, y) {
   if (G.score > G.hiScore) { G.hiScore = G.score; if (!G.attract) try { localStorage.setItem('neondash_hi', String(G.hiScore)); } catch (e) {} }
   (G.exitOpen ? SFX.gemBonus : SFX.gem)();
   addSparkle(x * TS + TS / 2, y * TS + TS / 2, spec.rim);
-  addPop(x * TS + TS / 2, y * TS + 6, `+${val}`, spec.rim);
+  addPop(x * TS + TS / 2, y * TS + 6, `+${val}`, '#ffd76a');
   if (!G.exitOpen && G.diamonds >= G.quota) {
     G.exitOpen = true;
     SFX.exitOpen();
@@ -522,9 +522,9 @@ function digDust(x, y) {
 }
 function landDust(x, y) {
   for (let i = 0; i < 5; i++)
-    G.parts.push({ kind: 'dust', x: x * TS + rng(2, 30), y: (y + 1) * TS - 2, vx: rng(-70, 70), vy: rng(-40, -8), r: rng(2, 5), color: '#8a94a8', life: rng(0.2, 0.4), t: 0 });
+    G.parts.push({ kind: 'dust', x: x * TS + rng(2, 30), y: (y + 1) * TS - 2, vx: rng(-70, 70), vy: rng(-40, -8), r: rng(2, 5), color: '#b09a78', life: rng(0.2, 0.4), t: 0 });
 }
-function addPop(x, y, txt, color) { G.pops.push({ x, y, txt, color, t: 0, life: 0.9 }); }
+function addPop(x, y, txt, color) { G.pops.push({ x, y, txt, color, t: 0, life: 0.7 }); }
 
 // ---------- solvability bot ----------
 function botDir() {
@@ -670,7 +670,7 @@ function tiles(ci) {
   const spec = CAVES[ci];
   srand(6000 + ci * 71);
   // per-cave earth tones: cold slate, ochre, mossy, violet-brown, rust
-  const EARTH = ['#5b6478', '#75593a', '#5f6d48', '#655473', '#75503c'][ci];
+  const EARTH = ['#7b5c3c', '#8a6a3a', '#6c6f44', '#5e5450', '#7d4b33'][ci];
   function dirt() {
     // one large flowing texture (8x8 tiles) — no visible cell seams
     const SPAN = 8;
@@ -734,7 +734,7 @@ function tiles(ci) {
   function brick() {
     const [c, x] = offCanvas(TS, TS);
     const g = x.createLinearGradient(0, 0, 0, TS);
-    g.addColorStop(0, shade(spec.rim, -0.62)); g.addColorStop(0.5, shade(spec.rim, -0.78)); g.addColorStop(1, shade(spec.rim, -0.68));
+    g.addColorStop(0, shade(EARTH, -0.12)); g.addColorStop(0.5, shade(EARTH, -0.44)); g.addColorStop(1, shade(EARTH, -0.3));
     x.fillStyle = g; x.fillRect(1, 1, TS - 2, TS - 2);
     // masonry bevel: lit crown, sunken foot — the wall has mass before it has glow
     x.fillStyle = 'rgba(255,255,255,0.16)';
@@ -746,17 +746,15 @@ function tiles(ci) {
     x.beginPath(); x.moveTo(3, TS / 2); x.lineTo(TS - 3, TS / 2); x.moveTo(TS / 2, 3); x.lineTo(TS / 2, TS / 2); x.stroke();
     x.strokeStyle = 'rgba(255,255,255,0.14)'; x.lineWidth = 1;
     x.beginPath(); x.moveTo(3, TS / 2 + 1.4); x.lineTo(TS - 3, TS / 2 + 1.4); x.moveTo(TS / 2 + 1.4, 3); x.lineTo(TS / 2 + 1.4, TS / 2); x.stroke();
-    x.save();
-    x.shadowColor = spec.rim; x.shadowBlur = 8;
-    x.strokeStyle = hexA(spec.rim, 0.9); x.lineWidth = 1.6;
-    x.strokeRect(2, 2, TS - 4, TS - 4);
-    x.restore();
+    // lantern kiss on the crown instead of a neon outline
+    x.strokeStyle = 'rgba(255,214,150,0.3)'; x.lineWidth = 1.4;
+    x.beginPath(); x.moveTo(2.5, 3.4); x.lineTo(TS - 2.5, 3.4); x.stroke();
     return c;
   }
   function steel() {
     const [c, x] = offCanvas(TS, TS);
     const g = x.createLinearGradient(0, 0, 0, TS);
-    g.addColorStop(0, '#3a4456'); g.addColorStop(0.5, '#222a3a'); g.addColorStop(1, '#2c3444');
+    g.addColorStop(0, '#4a4238'); g.addColorStop(0.5, '#2a251f'); g.addColorStop(1, '#37312a');
     x.fillStyle = g; x.fillRect(0, 0, TS, TS);
     x.strokeStyle = 'rgba(0,0,0,0.55)'; x.lineWidth = 1.5;
     x.strokeRect(0.75, 0.75, TS - 1.5, TS - 1.5);
@@ -877,7 +875,7 @@ const lctx = lightC.getContext('2d');
 function drawLighting(spec, plx, ply) {
   const s = 0.5;
   lctx.globalCompositeOperation = 'source-over';
-  lctx.fillStyle = G.mode === 'over' ? 'rgb(80,34,38)' : 'rgb(128,124,138)';
+  lctx.fillStyle = G.mode === 'over' ? 'rgb(80,34,38)' : 'rgb(114,100,82)';
   lctx.fillRect(0, 0, lightC.width, lightC.height);
   lctx.globalCompositeOperation = 'lighter';
   const light = (wx, wy, r, col, a) => {
@@ -888,7 +886,9 @@ function drawLighting(spec, plx, ply) {
     lctx.fillStyle = gl;
     lctx.beginPath(); lctx.arc(lx, ly, r * s, 0, 7); lctx.fill();
   };
-  light(plx + TS / 2, ply + TS / 2, 300, '#ffe9c8', 1.0);   // Otto's lamp
+  const panic = G.mode === 'play' && G.caveTime < 15;
+  const lampR = panic ? 300 * (0.82 + 0.09 * Math.sin(G.time * 11) + 0.05 * Math.sin(G.time * 23)) : 300;
+  light(plx + TS / 2, ply + TS / 2, lampR, '#ffe9c8', 1.0);   // Otto's lamp
   const x0 = clamp((G.cam.x / TS | 0) - 1, 0, CW), x1 = clamp(((G.cam.x + VW) / TS | 0) + 2, 0, CW);
   const y0 = clamp((G.cam.y / TS | 0) - 1, 0, CH), y1 = clamp(((G.cam.y + VH) / TS | 0) + 2, 0, CH);
   for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
@@ -898,7 +898,7 @@ function drawLighting(spec, plx, ply) {
     else if (c === 'M' && G.mwState === 1) light(x * TS + TS / 2, y * TS + TS / 2, 90, '#b48cff', 0.7);
   }
   for (const e of G.enemies) light(e.x * TS + TS / 2, e.y * TS + TS / 2, 110, e.type === 'f' ? '#ff4545' : '#ff2ee6', 0.55);
-  for (const pt of G.parts) if (pt.kind === 'flash' || pt.kind === 'fire') light(pt.x, pt.y, pt.r * 2.6, '#ffffff', 0.85);
+  for (const pt of G.parts) if (pt.kind === 'flash' || pt.kind === 'fire') light(pt.x, pt.y, pt.r * 2.0, '#ffd9a0', 0.55);
   ctx.save();
   ctx.beginPath(); ctx.rect(0, MQ, VW, VH); ctx.clip();
   ctx.globalCompositeOperation = 'multiply';
@@ -908,7 +908,7 @@ function drawLighting(spec, plx, ply) {
 const VIGNETTE = (() => {
   const [c, x] = offCanvas(W, H);
   const g = x.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 0.9);
-  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,6,0.42)');
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(12,6,0,0.46)');
   x.fillStyle = g; x.fillRect(0, 0, W, H);
   return c;
 })();
@@ -925,7 +925,7 @@ function draw() {
   G.cam.y += (tyc - G.cam.y) * 0.15;
 
   ctx.save();
-  ctx.fillStyle = '#060409';
+  ctx.fillStyle = '#0a0705';
   ctx.fillRect(0, 0, W, H);
   ctx.save();
   ctx.beginPath(); ctx.rect(0, MQ, VW, VH); ctx.clip();
@@ -935,13 +935,33 @@ function draw() {
 
   // carved tunnels read as warm rock hollows, not deleted tiles
   const bgGrad = ctx.createLinearGradient(0, G.cam.y, 0, G.cam.y + VH);
-  bgGrad.addColorStop(0, '#100c12'); bgGrad.addColorStop(1, '#0a0709');
+  bgGrad.addColorStop(0, '#150e08'); bgGrad.addColorStop(1, '#0c0805');
   ctx.fillStyle = bgGrad;
   ctx.fillRect(G.cam.x, G.cam.y, VW, VH);
 
   const x0 = clamp((G.cam.x / TS | 0) - 1, 0, CW), x1 = clamp(((G.cam.x + VW) / TS | 0) + 2, 0, CW);
   const y0 = clamp((G.cam.y / TS | 0) - 1, 0, CH), y1 = clamp(((G.cam.y + VH) / TS | 0) + 2, 0, CH);
   const hash = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
+  // objects sit in excavated pockets of the same earth, never on black stickers
+  const pocket = (px, py, x, y) => {
+    const sx = (x % T.span) * TS * 2, sy = (y % T.span) * TS * 2;
+    ctx.save();
+    ctx.globalAlpha = 0.62;
+    ctx.drawImage(T.dirt, sx, sy, TS * 2, TS * 2, px, py, TS, TS);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(8,5,2,0.34)';
+    ctx.fillRect(px, py, TS, TS);
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(px, py, TS, 3);
+    ctx.fillRect(px, py + 3, 3, TS - 3);
+    // crumbled lip where the pocket meets the earth
+    const h3 = hash(x * 5, y * 3);
+    ctx.fillStyle = 'rgba(140,112,80,0.5)';
+    for (let k3 = 0; k3 < 4; k3++) {
+      const ex2 = (h3 >> (k3 * 4)) & 15, ey2 = (h3 >> (k3 * 4 + 9)) & 1;
+      ctx.fillRect(px + 2 + ex2 * 2, ey2 ? py + 1 : py + TS - 3, 3, 2);
+    }
+  };
   for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
     const c = G.grid[y][x], px = x * TS, py = y * TS;
     if (c === '.') {
@@ -950,6 +970,7 @@ function draw() {
     } else if (c === 'W') ctx.drawImage(T.brick, px, py, TS, TS);
     else if (c === 'S') ctx.drawImage(T.steel, px, py, TS, TS);
     else if (c === 'r') {
+      pocket(px, py, x, y);
       const falling = G.fall[y][x];
       const aboutToFall = !falling && cellAt(x, y + 1) === ' ';
       const spr = T.boulders[hash(x, y * 7) & 3];
@@ -959,11 +980,16 @@ function draw() {
       ctx.scale(flip, 1);
       if (falling) {
         // the loudest sprite on screen: hot smear, speed lines, hard stretch
-        ctx.globalAlpha = 0.5;
+        let ly2 = y + 1;
+        while (ly2 < CH && cellAt(x, ly2) === ' ') ly2++;
+        const dist = Math.max(1, ly2 - y);
+        ctx.fillStyle = `rgba(0,0,0,${clamp(0.7 - dist * 0.08, 0.22, 0.62).toFixed(2)})`;
+        ctx.beginPath(); ctx.ellipse(0, dist * TS - TS / 2 - 2, 9 + 16 / dist, 4.2, 0, 0, 7); ctx.fill();
+        ctx.globalAlpha = 0.58;
         ctx.drawImage(spr, -TS / 2, -TS / 2 - 14, TS, TS);
-        ctx.globalAlpha = 0.3;
+        ctx.globalAlpha = 0.36;
         ctx.drawImage(spr, -TS / 2, -TS / 2 - 26, TS, TS);
-        ctx.globalAlpha = 0.15;
+        ctx.globalAlpha = 0.18;
         ctx.drawImage(spr, -TS / 2, -TS / 2 - 40, TS, TS);
         ctx.globalAlpha = 0.35;
         ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
@@ -1005,7 +1031,7 @@ function draw() {
       }
       ctx.restore();
     }
-    else if (c === 'd') drawGem(px, py, spec);
+    else if (c === 'd') { pocket(px, py, x, y); drawGem(px, py, spec); }
     else if (c === 'M') drawMagicWall(px, py);
     else if (c === 'X') drawExit(px, py, spec);
     else if (c === 'e') { /* blast handled by particles */ }
@@ -1055,6 +1081,13 @@ function draw() {
   ctx.restore();
 
   drawLighting(spec, plx, ply);
+  if (G.mode === 'play' && G.caveTime < 15) {
+    const pa = 0.22 + 0.12 * Math.sin(G.time * 6);
+    const pg2 = ctx.createRadialGradient(VW / 2, MQ + VH / 2, VH * 0.38, VW / 2, MQ + VH / 2, VH * 0.85);
+    pg2.addColorStop(0, 'rgba(0,0,0,0)'); pg2.addColorStop(1, `rgba(185,32,20,${pa.toFixed(3)})`);
+    ctx.fillStyle = pg2;
+    ctx.fillRect(0, MQ, VW, VH);
+  }
   drawMarquee(spec);
   drawHUD(spec);
   drawExitArrow(spec);
@@ -1149,17 +1182,24 @@ function drawExit(px, py, spec) {
   ctx.drawImage(tiles(G.cave).steel, px, py, TS, TS);
   ctx.save();
   if (open) {
-    ctx.fillStyle = flash ? '#ffffff' : shade(spec.rim, 0.3);
-    ctx.globalAlpha = 1;
-    ctx.fillRect(px + 2, py + 2, TS - 4, TS - 4);
-    ctx.globalAlpha = 1;
+    // a brass-framed doorway breathing warm light into the cave
+    const dg = ctx.createLinearGradient(px, py + 2, px, py + TS - 2);
+    dg.addColorStop(0, flash ? '#fff6dd' : '#ffd97a'); dg.addColorStop(1, flash ? '#ffe9b8' : '#c98d34');
+    ctx.fillStyle = dg;
+    ctx.fillRect(px + 4, py + 3, TS - 8, TS - 5);
+    ctx.fillStyle = 'rgba(20,12,4,0.5)';
+    ctx.fillRect(px + 4, py + 3, TS - 8, 5);
+    ctx.strokeStyle = '#b08d4a'; ctx.lineWidth = 3;
+    ctx.strokeRect(px + 3, py + 2.5, TS - 6, TS - 4);
+    ctx.fillStyle = `rgba(255,215,106,${(0.24 + 0.12 * Math.sin(G.time * 3)).toFixed(3)})`;
+    ctx.beginPath(); ctx.ellipse(px + TS / 2, py + TS + 4, 38, 9, 0, 0, 7); ctx.fill();
     ctx.globalCompositeOperation = 'lighter';
-    const g = ctx.createRadialGradient(px + TS / 2, py + TS / 2, 0, px + TS / 2, py + TS / 2, 84);
-    g.addColorStop(0, hexA(spec.rim, flash ? 0.9 : 0.6)); g.addColorStop(1, 'rgba(0,0,0,0)');
+    const g = ctx.createRadialGradient(px + TS / 2, py + TS / 2, 0, px + TS / 2, py + TS / 2, 116);
+    g.addColorStop(0, hexA('#ffd76a', flash ? 0.9 : 0.5 + 0.18 * Math.sin(G.time * 3))); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(px + TS / 2, py + TS / 2, 84, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + TS / 2, py + TS / 2, 116, 0, 7); ctx.fill();
     // beacon rays
-    ctx.strokeStyle = hexA('#ffffff', 0.75);
+    ctx.strokeStyle = hexA('#ffe9b8', 0.7);
     ctx.lineWidth = 4;
     ctx.translate(px + TS / 2, py + TS / 2);
     ctx.rotate(G.time * 2);
@@ -1168,7 +1208,7 @@ function drawExit(px, py, spec) {
       ctx.beginPath(); ctx.moveTo(20, 0); ctx.lineTo(46, 0); ctx.stroke();
     }
   } else {
-    ctx.strokeStyle = 'rgba(150,175,205,0.55)';
+    ctx.strokeStyle = 'rgba(201,163,92,0.45)';
     ctx.lineWidth = 2.5;
     ctx.strokeRect(px + 4, py + 4, TS - 8, TS - 8);
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
@@ -1198,7 +1238,7 @@ function drawExitArrow(spec) {
 function drawEnemy(e) {
   // kill colors are reserved: firefly red, butterfly magenta — no cave uses them
   const ex = e.x * TS + TS / 2, ey = e.y * TS + TS / 2;
-  const KILLF = '#ff4545', KILLB = '#ff2ee6';
+  const KILLF = '#ff4545', KILLB = '#ff3d8f';
   ctx.save();
   ctx.translate(ex, ey);
   if (e.type === 'f') {
@@ -1273,7 +1313,7 @@ function drawOtto(px, py, p) {
   ctx.beginPath(); ctx.ellipse(0, -1.5, 11, 3.5, 0, 0, 7); ctx.fill();
   if (p.pushT > 0) ctx.rotate(p.dir * 0.22);
   else if (p.moving) ctx.rotate(p.dir * 0.08);
-  ctx.shadowColor = 'rgba(51,214,255,0.6)'; ctx.shadowBlur = 8;
+  ctx.shadowColor = 'rgba(255,214,150,0.5)'; ctx.shadowBlur = 8;
   ctx.drawImage(spr, -16, -41, 32, 42);
   ctx.restore();
 }
@@ -1363,29 +1403,29 @@ function drawPops() {
     ctx.font = `900 15px ${MONO}`;
     ctx.textAlign = 'center';
     const tw2 = ctx.measureText(o.txt).width + 14;
-    ctx.fillStyle = 'rgba(5,8,14,0.75)';
+    ctx.fillStyle = 'rgba(22,15,8,0.72)';
     ctx.beginPath(); ctx.roundRect(-tw2 / 2, -14, tw2, 19, 5); ctx.fill();
     ctx.lineWidth = 4; ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(5,8,14,0.95)';
+    ctx.strokeStyle = 'rgba(22,15,8,0.95)';
     ctx.strokeText(o.txt, 0, 0);
     ctx.shadowColor = o.color; ctx.shadowBlur = 8;
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = o.color;
     ctx.fillText(o.txt, 0, 0);
     ctx.restore();
   }
   ctx.globalAlpha = 1;
 }
 function drawMarquee(spec) {
-  ctx.fillStyle = '#07090f';
+  ctx.fillStyle = '#171008';
   ctx.fillRect(0, 0, W, MQ);
-  ctx.fillStyle = hexA(spec.rim, 0.5);
+  ctx.fillStyle = 'rgba(201,163,92,0.55)';
   ctx.fillRect(0, MQ - 2, W, 2);
   ctx.textAlign = 'center';
   ctx.font = '800 17px "Arial Black", Arial, sans-serif';
   ctx.letterSpacing = '4px';
-  ctx.fillStyle = shade(spec.rim, 0.35);
+  ctx.fillStyle = '#e8c987';
   ctx.save();
-  ctx.shadowColor = spec.rim; ctx.shadowBlur = 10;
+  ctx.shadowColor = 'rgba(255,190,90,0.5)'; ctx.shadowBlur = 8;
   ctx.fillText(spec.name, W / 2, 27);
   ctx.restore();
   // objective status is a state machine: it never contradicts a banner
@@ -1394,11 +1434,11 @@ function drawMarquee(spec) {
     ctx.letterSpacing = '2px';
     ctx.textAlign = 'left';
     if (G.exitOpen) {
-      ctx.fillStyle = Math.sin(G.time * 6) > 0 ? '#3ae374' : shade('#3ae374', 0.4);
+      ctx.fillStyle = Math.sin(G.time * 6) > 0 ? '#ffd76a' : shade('#ffd76a', 0.35);
       ctx.fillText('EXIT OPEN', 24, 27);
     } else {
       ctx.drawImage(tiles(G.cave).gem, 18, 8, 20, 20);
-      ctx.fillStyle = 'rgba(220,238,255,1)';
+      ctx.fillStyle = 'rgba(240,228,205,1)';
       ctx.fillText(`QUOTA ${Math.max(0, G.quota - G.diamonds)} MORE`, 44, 27);
     }
     ctx.letterSpacing = '0px';
@@ -1407,10 +1447,10 @@ function drawMarquee(spec) {
     ctx.save();
     ctx.globalAlpha = clamp(G.hintT, 0, 1);
     ctx.textAlign = 'right';
-    ctx.font = '600 10px Verdana, sans-serif';
+    ctx.font = '600 11px Verdana, sans-serif';
     ctx.letterSpacing = '1px';
-    ctx.fillStyle = 'rgba(200,225,250,0.9)';
-    ctx.fillText(MOVE_HINT, W - 20, 27);
+    ctx.fillStyle = 'rgba(226,208,178,0.9)';
+    ctx.fillText(MOVE_HINT, W - 24, 27);
     ctx.letterSpacing = '0px';
     ctx.restore();
   }
@@ -1418,20 +1458,20 @@ function drawMarquee(spec) {
 function drawHUD(spec) {
   const HY = H - HUD_H;
   const LB = HY + 34, VB = HY + 74;
-  ctx.fillStyle = '#080d17';
+  ctx.fillStyle = '#161009';
   ctx.fillRect(0, HY, W, HUD_H);
   ctx.save();
-  ctx.shadowColor = spec.rim; ctx.shadowBlur = 6;
-  ctx.fillStyle = hexA(spec.rim, 0.7);
+  ctx.shadowColor = 'rgba(255,190,90,0.4)'; ctx.shadowBlur = 6;
+  ctx.fillStyle = 'rgba(201,163,92,0.85)';
   ctx.fillRect(0, HY, W, 2);
   ctx.restore();
-  ctx.fillStyle = 'rgba(160,195,230,0.26)';
+  ctx.fillStyle = 'rgba(201,173,120,0.22)';
   for (const zx of [420, 700, 940, 1120]) ctx.fillRect(zx, HY + 16, 1, 72);
   function label(txt, x) {
     ctx.font = '700 12px Verdana, sans-serif';
     ctx.letterSpacing = '3px';
     ctx.textAlign = 'left';
-    ctx.fillStyle = 'rgba(190,218,245,1)';
+    ctx.fillStyle = 'rgba(214,192,156,1)';
     ctx.fillText(txt, x, LB);
     ctx.letterSpacing = '0px';
   }
@@ -1439,7 +1479,7 @@ function drawHUD(spec) {
   label('DIAMONDS', 32);
   const quota = G.quota;
   ctx.font = `800 26px ${MONO}`;
-  ctx.fillStyle = G.exitOpen ? '#3ae374' : '#ffffff';
+  ctx.fillStyle = G.exitOpen ? '#ffd76a' : '#ffffff';
   ctx.save();
   ctx.shadowColor = spec.rim; ctx.shadowBlur = 10;
   ctx.fillText(`${G.diamonds}/${quota}`, 196, LB + 2);
@@ -1453,20 +1493,20 @@ function drawHUD(spec) {
   if (hudGk > 0.35) starGlint(166, LB - 14, 3 + 3 * (hudGk - 0.35) / 0.65, (hudGk - 0.35) / 0.65);
   ctx.font = '700 11px Verdana, sans-serif';
   ctx.letterSpacing = '2px';
-  ctx.fillStyle = 'rgba(190,218,245,0.85)';
+  ctx.fillStyle = 'rgba(214,192,156,0.85)';
   ctx.fillText('VALUE', 32, VB);
   ctx.letterSpacing = '0px';
   ctx.font = `800 15px ${MONO}`;
-  ctx.fillStyle = G.exitOpen ? '#3ae374' : '#eef4ff';
+  ctx.fillStyle = G.exitOpen ? '#ffd76a' : '#f5edd8';
   ctx.fillText(G.exitOpen ? '15' : '10', 100, VB + 1);
   if (G.exitOpen) {
-    ctx.fillStyle = 'rgba(58,227,116,0.16)';
-    ctx.strokeStyle = 'rgba(58,227,116,0.8)';
+    ctx.fillStyle = 'rgba(176,141,74,0.92)';
+    ctx.strokeStyle = 'rgba(243,231,200,0.5)';
     ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.roundRect(132, VB - 12, 58, 17, 4); ctx.fill(); ctx.stroke();
     ctx.font = '700 9px Verdana, sans-serif';
     ctx.letterSpacing = '2px';
-    ctx.fillStyle = '#3ae374';
+    ctx.fillStyle = '#1a1206';
     ctx.fillText('BONUS', 142, VB);
     ctx.letterSpacing = '0px';
   }
@@ -1474,25 +1514,25 @@ function drawHUD(spec) {
   label('SCORE', 450);
   ctx.font = `800 26px ${MONO}`;
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#f5edd8';
   ctx.save();
-  ctx.shadowColor = 'rgba(51,214,255,0.6)'; ctx.shadowBlur = 8;
+  ctx.shadowColor = 'rgba(255,200,120,0.4)'; ctx.shadowBlur = 8;
   ctx.fillText(G.score.toLocaleString('en-US'), 672, LB + 2);
   ctx.restore();
   ctx.font = '700 12px Verdana, sans-serif';
   ctx.letterSpacing = '3px';
   ctx.textAlign = 'left';
-  ctx.fillStyle = 'rgba(180,210,240,0.7)';
+  ctx.fillStyle = 'rgba(200,180,145,0.7)';
   ctx.fillText('HIGH', 450, VB);
   ctx.letterSpacing = '0px';
   ctx.font = `800 18px ${MONO}`;
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#8fa8c0';
+  ctx.fillStyle = '#a89878';
   ctx.fillText(G.hiScore.toLocaleString('en-US'), 672, VB + 1);
   // zone 3: time
   label('TIME', 730);
   const tfrac = clamp(G.caveTime / CAVES[G.cave].time, 0, 1);
-  const tcol = G.caveTime < 15 ? '#ff3b5c' : G.caveTime < 35 ? '#ffb020' : '#33d6ff';
+  const tcol = G.caveTime < 15 ? '#ff6b5e' : G.caveTime < 35 ? '#ffb020' : '#e8b45c';
   ctx.font = `800 26px ${MONO}`;
   ctx.textAlign = 'right';
   ctx.fillStyle = tcol;
@@ -1501,7 +1541,7 @@ function drawHUD(spec) {
   ctx.globalAlpha = 1;
   const bx = 730, bw = 175, by = HY + 62, bh = 12;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.strokeStyle = 'rgba(140,180,220,0.25)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(201,173,120,0.3)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.roundRect(bx - 3, by - 3, bw + 6, bh + 6, 5); ctx.fill(); ctx.stroke();
   ctx.save();
   ctx.shadowColor = tcol; ctx.shadowBlur = 6;
@@ -1517,21 +1557,22 @@ function drawHUD(spec) {
   CAVES.forEach((cv, i) => {
     const dx = 1150 + i * 24, dy = HY + 62;
     const done = i < G.cave || (i === G.cave && G.mode === 'win');
-    ctx.fillStyle = done ? hexA(cv.rim, 0.95) : i === G.cave ? hexA(cv.rim, 0.35) : 'rgba(255,255,255,0.12)';
-    if (i <= G.cave) { ctx.save(); ctx.shadowColor = cv.rim; ctx.shadowBlur = 7; }
+    const current = i === G.cave && !done;
+    ctx.fillStyle = done ? '#b08d4a' : current ? '#f3e7c8' : 'rgba(176,141,74,0.25)';
+    if (done || current) { ctx.save(); ctx.shadowColor = 'rgba(255,200,110,0.8)'; ctx.shadowBlur = 7; }
     ctx.beginPath(); ctx.roundRect(dx - 8, dy - 7, 17, 14, 4); ctx.fill();
-    if (i === G.cave && !done) { ctx.strokeStyle = hexA(cv.rim, 0.95); ctx.lineWidth = 1.5; ctx.stroke(); }
-    if (i <= G.cave) ctx.restore();
+    if (current) { ctx.strokeStyle = '#b08d4a'; ctx.lineWidth = 1.5; ctx.stroke(); }
+    if (done || current) ctx.restore();
     ctx.font = `700 9px ${MONO}`;
     ctx.textAlign = 'center';
-    ctx.fillStyle = i < G.cave ? '#0a0e16' : i === G.cave ? '#ffffff' : 'rgba(200,220,245,0.8)';
+    ctx.fillStyle = done || current ? '#1a1206' : 'rgba(214,192,156,0.55)';
     ctx.fillText(String(i + 1), dx + 0.5, dy + 3);
   });
 }
 function banner(title, color, sub) {
   ctx.save();
   const by = H / 2 - 78, bh = 140;
-  ctx.fillStyle = '#05080f';
+  ctx.fillStyle = '#120c06';
   ctx.fillRect(0, by, W, bh);
   ctx.save();
   ctx.shadowColor = color; ctx.shadowBlur = 10;
@@ -1548,14 +1589,14 @@ function banner(title, color, sub) {
   ctx.shadowBlur = 0;
   ctx.font = '600 15px Verdana, sans-serif';
   ctx.letterSpacing = '3px';
-  ctx.fillStyle = 'rgba(225,240,255,0.92)';
+  ctx.fillStyle = 'rgba(240,226,200,0.92)';
   ctx.fillText(sub, W / 2, by + 100);
   ctx.letterSpacing = '0px';
   ctx.restore();
 }
 function drawTitle(spec) {
   ctx.save();
-  ctx.fillStyle = '#060409';
+  ctx.fillStyle = '#0a0705';
   ctx.fillRect(0, 0, W, H);
   // the promise of the game: a cave cross-section along the bottom third
   const T = tiles(0), groundY = 520;
@@ -1564,8 +1605,14 @@ function drawTitle(spec) {
     ctx.drawImage(T.dirt, sx, sy, TS * 2, TS * 2, x, y, TS, TS);
   }
   // carved pocket where Otto stands
-  ctx.fillStyle = '#100c12';
-  ctx.fillRect(W / 2 - 160, groundY, 320, TS * 2);
+  ctx.save();
+  ctx.translate(W / 2, groundY + 46);
+  ctx.scale(2.4, 1);
+  const pg = ctx.createRadialGradient(0, 0, 8, 0, 0, 92);
+  pg.addColorStop(0, 'rgba(9,6,3,0.85)'); pg.addColorStop(0.6, 'rgba(9,6,3,0.6)'); pg.addColorStop(1, 'rgba(9,6,3,0)');
+  ctx.fillStyle = pg;
+  ctx.beginPath(); ctx.arc(0, 0, 92, 0, 7); ctx.fill();
+  ctx.restore();
   // buried gems glinting in the dirt — the real jewels, catching fire in turn
   srand(31337);
   for (let i = 0; i < 8; i++) {
@@ -1579,16 +1626,16 @@ function drawTitle(spec) {
     if (tgk > 0.55) starGlint(gx - 3, gy - 6, 3 + 4 * (tgk - 0.55) / 0.45, (tgk - 0.55) / 0.45);
   }
   // a boulder mid-fall over the pocket, its shadow rushing up to meet it
-  const bobY = 425 + ((G.time * 130) % 90);
+  const bobY = 445 + ((G.time * 130) % 85);
   const prox = ((G.time * 130) % 90) / 90;
   ctx.fillStyle = `rgba(0,0,0,${0.16 + 0.3 * prox})`;
-  ctx.beginPath(); ctx.ellipse(W / 2 + 96 + TS * 0.7, groundY + TS * 2 - 4, 14 + 9 * prox, 4.5, 0, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(150 + TS * 0.7, groundY + TS * 2 - 4, 14 + 9 * prox, 4.5, 0, 0, 7); ctx.fill();
   ctx.globalAlpha = 0.45;
-  ctx.drawImage(T.boulders[1], W / 2 + 96, bobY - 16, TS * 1.4, TS * 1.4);
+  ctx.drawImage(T.boulders[1], 150, bobY - 16, TS * 1.4, TS * 1.4);
   ctx.globalAlpha = 0.22;
-  ctx.drawImage(T.boulders[1], W / 2 + 96, bobY - 30, TS * 1.4, TS * 1.4);
+  ctx.drawImage(T.boulders[1], 150, bobY - 30, TS * 1.4, TS * 1.4);
   ctx.globalAlpha = 1;
-  ctx.drawImage(T.boulders[1], W / 2 + 96, bobY, TS * 1.4, TS * 1.4);
+  ctx.drawImage(T.boulders[1], 150, bobY, TS * 1.4, TS * 1.4);
   // Otto, hero-size, headlamp on
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
@@ -1598,15 +1645,15 @@ function drawTitle(spec) {
   ctx.beginPath(); ctx.arc(W / 2 + 40, groundY + 34, 150, 0, 7); ctx.fill();
   ctx.restore();
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.beginPath(); ctx.ellipse(W / 2, groundY + 88, 34, 8, 0, 0, 7); ctx.fill();
-  ctx.drawImage(SPR.walk1, W / 2 - 48, groundY - 36, 96, 128);
+  ctx.beginPath(); ctx.ellipse(W / 2, groundY + 108, 34, 8, 0, 0, 7); ctx.fill();
+  ctx.drawImage(SPR.walk1, W / 2 - 48, groundY - 16, 96, 128);
   // lockup band
   const by2 = 120, bh = 290;
-  ctx.fillStyle = 'rgba(5,8,15,0.92)';
+  ctx.fillStyle = 'rgba(18,12,6,0.93)';
   ctx.fillRect(0, by2, W, bh);
   ctx.save();
-  ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 9;
-  ctx.fillStyle = 'rgba(51,214,255,0.6)';
+  ctx.shadowColor = 'rgba(255,190,90,0.55)'; ctx.shadowBlur = 9;
+  ctx.fillStyle = 'rgba(201,163,92,0.7)';
   ctx.fillRect(0, by2, W, 1.5);
   ctx.fillRect(0, by2 + bh - 1.5, W, 1.5);
   ctx.restore();
@@ -1616,22 +1663,26 @@ function drawTitle(spec) {
   ctx.letterSpacing = '10px';
   // neon done right: tight halo, then a hot gradient core cooling toward the cave
   ctx.save();
-  ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 22;
-  ctx.fillStyle = '#54c8ea'; ctx.fillText('NEON DASH', W / 2, ly);
-  ctx.shadowBlur = 5;
+  // engraved gold under lantern light: deep relief, warm halo, hot crown
+  ctx.shadowColor = 'rgba(255,176,60,0.55)'; ctx.shadowBlur = 20;
+  ctx.fillStyle = '#3a2812'; ctx.fillText('NEON DASH', W / 2, ly + 4);
+  ctx.shadowBlur = 0;
   const wm = ctx.createLinearGradient(0, ly - 74, 0, ly + 8);
-  wm.addColorStop(0, '#ffffff'); wm.addColorStop(0.55, '#d6f6ff'); wm.addColorStop(1, '#5ddcff');
+  wm.addColorStop(0, '#fff3d0'); wm.addColorStop(0.45, '#ffd97a');
+  wm.addColorStop(0.75, '#c98d34'); wm.addColorStop(1, '#8a5c22');
   ctx.fillStyle = wm; ctx.fillText('NEON DASH', W / 2, ly);
+  ctx.strokeStyle = 'rgba(58,40,18,0.8)'; ctx.lineWidth = 1.5;
+  ctx.strokeText('NEON DASH', W / 2, ly);
   ctx.restore();
   ctx.letterSpacing = '5px';
   ctx.font = '600 17px Verdana, sans-serif';
-  ctx.fillStyle = '#7fb0d0';
+  ctx.fillStyle = '#c8b08a';
   ctx.fillText('A TRIBUTE TO BOULDER DASH', W / 2, ly + 50);
   // the subtitle wears the currency: faceted gems set at each end
   for (const gs of [-1, 1]) {
     ctx.save();
     ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 10;
-    ctx.drawImage(T.gem, W / 2 + gs * 296 - 14, ly + 30, 28, 28);
+    ctx.drawImage(T.gem, W / 2 + gs * 296 - 14, ly + 34, 28, 28);
     ctx.restore();
     const wgk = Math.sin(G.time * 2.4 + (gs + 1) * 1.3);
     if (wgk > 0.3) starGlint(W / 2 + gs * 296 - 3, ly + 38, 3.5 + 4 * (wgk - 0.3) / 0.7, (wgk - 0.3) / 0.7);
@@ -1640,15 +1691,18 @@ function drawTitle(spec) {
   ctx.globalAlpha = a;
   ctx.font = '900 24px "Arial Black", Arial, sans-serif';
   ctx.letterSpacing = '3px';
-  ctx.fillStyle = '#ffffff';
-  ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 12;
+  ctx.fillStyle = '#f3e7c8';
+  ctx.shadowColor = 'rgba(255,200,110,0.8)'; ctx.shadowBlur = 12;
   ctx.fillText(IS_TOUCH ? 'TAP TO START' : 'PRESS SPACE TO START', W / 2, ly + 118);
   ctx.globalAlpha = 1; ctx.shadowBlur = 0;
   ctx.font = '600 13px Verdana, sans-serif';
   ctx.letterSpacing = '3px';
-  ctx.fillStyle = 'rgba(180,210,235,0.95)';
+  ctx.fillStyle = 'rgba(10,7,4,0.68)';
+  ctx.fillRect(0, 430, W, 64);
+  ctx.fillStyle = 'rgba(222,204,172,0.95)';
   ctx.fillText('OTTO RETURNS — DIG THE CAVES, DODGE THE BOULDERS, TAKE EVERY DIAMOND', W / 2, 452);
-  ctx.fillStyle = 'rgba(160,190,220,0.85)';
+  ctx.font = '600 11px Verdana, sans-serif';
+  ctx.fillStyle = 'rgba(198,180,150,0.8)';
   ctx.fillText(MOVE_HINT, W / 2, 480);
   if (IS_TOUCH && window.innerHeight > window.innerWidth) {
     ctx.fillStyle = '#ffd12a';
