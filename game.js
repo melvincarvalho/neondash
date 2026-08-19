@@ -670,26 +670,43 @@ function tiles(ci) {
   const spec = CAVES[ci];
   srand(6000 + ci * 71);
   // per-cave earth tones: cold slate, ochre, mossy, violet-brown, rust
-  const EARTH = ['#4a505c', '#5c462e', '#4a5438', '#4e4058', '#5a3e30'][ci];
+  const EARTH = ['#5b6478', '#75593a', '#5f6d48', '#655473', '#75503c'][ci];
   function dirt() {
     // one large flowing texture (8x8 tiles) — no visible cell seams
     const SPAN = 8;
     const [c, x] = offCanvas(TS * SPAN, TS * SPAN);
-    const base = shade(EARTH, -0.12);
+    const base = shade(EARTH, -0.08);
     x.fillStyle = base;
     x.fillRect(0, 0, TS * SPAN, TS * SPAN);
     // multi-octave blotches flowing across cell boundaries
     for (let i = 0; i < 90; i++) {
       const bx = rng(0, TS * SPAN), by = rng(0, TS * SPAN), br2 = rng(14, 60);
       const g2 = x.createRadialGradient(bx, by, 0, bx, by, br2);
-      g2.addColorStop(0, hexA2(shade(EARTH, rng(-0.15, 0.18)), rng(0.15, 0.35)));
+      g2.addColorStop(0, hexA2(shade(EARTH, rng(-0.2, 0.26)), rng(0.18, 0.4)));
       g2.addColorStop(1, 'rgba(0,0,0,0)');
       x.fillStyle = g2;
       x.beginPath(); x.arc(bx, by, br2, 0, 7); x.fill();
     }
+    // sedimentary strata: wavy bands compress the earth into layers
+    for (let i = 0; i < 6; i++) {
+      const sy3 = (i + rng(0.25, 0.75)) * (TS * SPAN / 6);
+      for (const [off, col, a3, lw3] of [[0, shade(EARTH, -0.38), 0.45, rng(2.5, 5)], [-2.5, shade(EARTH, 0.42), 0.2, 1.4]]) {
+        x.strokeStyle = hexA2(col, a3);
+        x.lineWidth = lw3;
+        x.beginPath();
+        for (let sx3 = -8; sx3 <= TS * SPAN + 8; sx3 += 14)
+          x.lineTo(sx3, sy3 + off + Math.sin(sx3 * 0.045 + i * 2.2) * 3.5 + rng(-1.2, 1.2));
+        x.stroke();
+      }
+    }
     for (let i = 0; i < 500; i++) {
-      x.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.25)' : hexA2(shade(EARTH, 0.4), 0.1);
+      x.fillStyle = rnd() < 0.5 ? 'rgba(0,0,0,0.28)' : hexA2(shade(EARTH, 0.45), 0.14);
       x.fillRect(rng(0, TS * SPAN - 3) | 0, rng(0, TS * SPAN - 3) | 0, rng(1, 3.5) | 0, rng(1, 3) | 0);
+    }
+    // mineral flecks in the cave's own light: unmined promise in the dirt
+    for (let i = 0; i < 44; i++) {
+      x.fillStyle = hexA(spec.rim, rng(0.2, 0.48));
+      x.fillRect(rng(2, TS * SPAN - 4) | 0, rng(2, TS * SPAN - 3) | 0, rnd() < 0.3 ? 2 : 1, 1);
     }
     // embedded pebbles and root threads
     for (let i = 0; i < 26; i++) {
@@ -719,13 +736,21 @@ function tiles(ci) {
     const g = x.createLinearGradient(0, 0, 0, TS);
     g.addColorStop(0, shade(spec.rim, -0.62)); g.addColorStop(0.5, shade(spec.rim, -0.78)); g.addColorStop(1, shade(spec.rim, -0.68));
     x.fillStyle = g; x.fillRect(1, 1, TS - 2, TS - 2);
+    // masonry bevel: lit crown, sunken foot — the wall has mass before it has glow
+    x.fillStyle = 'rgba(255,255,255,0.16)';
+    x.fillRect(2, 2, TS - 4, 2.5); x.fillRect(2, 2, 2.5, TS - 4);
+    x.fillStyle = 'rgba(0,0,0,0.4)';
+    x.fillRect(2, TS - 4.5, TS - 4, 2.5); x.fillRect(TS - 4.5, 2, 2.5, TS - 4);
+    // mortar grooves, shadowed then lit
+    x.strokeStyle = 'rgba(0,0,0,0.45)'; x.lineWidth = 1.6;
+    x.beginPath(); x.moveTo(3, TS / 2); x.lineTo(TS - 3, TS / 2); x.moveTo(TS / 2, 3); x.lineTo(TS / 2, TS / 2); x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.14)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(3, TS / 2 + 1.4); x.lineTo(TS - 3, TS / 2 + 1.4); x.moveTo(TS / 2 + 1.4, 3); x.lineTo(TS / 2 + 1.4, TS / 2); x.stroke();
     x.save();
     x.shadowColor = spec.rim; x.shadowBlur = 8;
     x.strokeStyle = hexA(spec.rim, 0.9); x.lineWidth = 1.6;
     x.strokeRect(2, 2, TS - 4, TS - 4);
     x.restore();
-    x.strokeStyle = 'rgba(255,255,255,0.15)'; x.lineWidth = 1;
-    x.beginPath(); x.moveTo(2, TS / 2); x.lineTo(TS - 2, TS / 2); x.moveTo(TS / 2, 2); x.lineTo(TS / 2, TS / 2); x.stroke();
     return c;
   }
   function steel() {
@@ -747,25 +772,30 @@ function tiles(ci) {
   }
   function boulder(v) {
     // craggy mineral rocks in the cave's own stone — four variants, no logo facet
-    const tint = shade(EARTH, 0.3);
+    const tint = shade(EARTH, 0.42);
     const [c, x] = offCanvas(TS, TS);
-    x.fillStyle = 'rgba(0,0,0,0.4)';
-    x.beginPath(); x.ellipse(TS / 2 + 1, TS / 2 + 5, 14, 10, 0, 0, 7); x.fill();
-    x.beginPath();
+    x.fillStyle = 'rgba(0,0,0,0.45)';
+    x.beginPath(); x.ellipse(TS / 2 + 1, TS / 2 + 5, 14, 9.5, 0, 0, 7); x.fill();
     const pts = 10;
-    for (let i = 0; i < pts; i++) {
-      const a = i / pts * Math.PI * 2 + v * 1.7;
-      const rr = 15 + Math.sin(i * (2.3 + v * 0.6) + ci + v * 3) * 2.2;
-      const px2 = TS / 2 + Math.cos(a) * rr, py2 = TS / 2 + Math.sin(a) * rr * 0.94;
-      i ? x.lineTo(px2, py2) : x.moveTo(px2, py2);
-    }
-    x.closePath();
-    const g = x.createRadialGradient(TS / 2 - 5, TS / 2 - 6, 2, TS / 2, TS / 2, 17);
-    g.addColorStop(0, shade(tint, 0.4)); g.addColorStop(0.55, tint); g.addColorStop(1, shade(tint, -0.62));
+    const silhouette = () => {
+      x.beginPath();
+      for (let i = 0; i < pts; i++) {
+        const a = i / pts * Math.PI * 2 + v * 1.7;
+        const rr = 15 + Math.sin(i * (2.3 + v * 0.6) + ci + v * 3) * 2.2;
+        const px2 = TS / 2 + Math.cos(a) * rr, py2 = TS / 2 + Math.sin(a) * rr * 0.94;
+        i ? x.lineTo(px2, py2) : x.moveTo(px2, py2);
+      }
+      x.closePath();
+    };
+    silhouette();
+    // hard key light from the upper-left, falling away into a deep core
+    const g = x.createRadialGradient(TS / 2 - 6, TS / 2 - 8, 2, TS / 2, TS / 2, 18);
+    g.addColorStop(0, shade(tint, 0.62)); g.addColorStop(0.45, tint);
+    g.addColorStop(0.8, shade(tint, -0.4)); g.addColorStop(1, shade(tint, -0.72));
     x.fillStyle = g;
     x.fill();
     x.save(); x.clip();
-    x.strokeStyle = 'rgba(0,0,0,0.4)';
+    x.strokeStyle = 'rgba(0,0,0,0.42)';
     x.lineWidth = 1.3;
     x.beginPath();
     for (let k = 0; k < 3; k++) {
@@ -776,18 +806,68 @@ function tiles(ci) {
     }
     x.stroke();
     // one key-lit plane and a deep core shadow instead of a chevron watermark
-    x.fillStyle = hexA2(shade(tint, 0.55), 0.35);
+    x.fillStyle = hexA2(shade(tint, 0.8), 0.45);
     x.beginPath();
-    x.moveTo(8, 8); x.lineTo(16 + v, 6); x.lineTo(13, 14); x.closePath();
+    x.moveTo(7, 9); x.quadraticCurveTo(14 + v, 4, 21 - v, 8);
+    x.quadraticCurveTo(15, 11, 9, 13); x.closePath();
     x.fill();
-    x.fillStyle = 'rgba(0,0,0,0.3)';
-    x.beginPath(); x.ellipse(TS / 2 + 4, TS / 2 + 6, 9, 6, 0.4, 0, 7); x.fill();
+    x.fillStyle = 'rgba(0,0,0,0.36)';
+    x.beginPath(); x.ellipse(TS / 2 + 4, TS / 2 + 7, 10, 6, 0.4, 0, 7); x.fill();
+    // mineral speckle: bright grit on the lit face, dark pores in shadow
+    for (let k = 0; k < 14; k++) {
+      const ax = 5 + ((v * 13 + k * 17) % 22), ay = 5 + ((v * 11 + k * 23) % 22);
+      x.fillStyle = (ax + ay) < 30 ? hexA2(shade(tint, 0.85), 0.5) : 'rgba(0,0,0,0.38)';
+      x.fillRect(ax, ay, 1.6, 1.6);
+    }
     x.restore();
-    x.strokeStyle = 'rgba(0,0,0,0.55)'; x.lineWidth = 1.2;
+    // dark occlusion rim all round, then a cool skylight kiss on the crown
+    silhouette();
+    x.strokeStyle = 'rgba(0,0,0,0.6)'; x.lineWidth = 1.4;
     x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.32)'; x.lineWidth = 1.2;
+    x.beginPath(); x.arc(TS / 2 - 1, TS / 2 + 0.5, 14.4, -2.45, -1.15); x.stroke();
     return c;
   }
-  TILE_CACHE[ci] = { dirt: dirt(), brick: brick(), steel: steel(), boulders: [boulder(0), boulder(1), boulder(2), boulder(3)], span: 8 };
+  function gem() {
+    // a brilliant-cut jewel in the cave's own light: crown, girdle, pavilion
+    const [c, x] = offCanvas(TS, TS);
+    const cx2 = TS / 2, cy2 = TS / 2 + 1;
+    const F = (pts2, col) => {
+      x.beginPath();
+      pts2.forEach(([fx, fy], i) => i ? x.lineTo(cx2 + fx, cy2 + fy) : x.moveTo(cx2 + fx, cy2 + fy));
+      x.closePath(); x.fillStyle = col; x.fill();
+    };
+    x.save();
+    x.shadowColor = spec.rim; x.shadowBlur = 9;
+    F([[-7, -12], [7, -12], [14, -3], [0, 13], [-14, -3]], shade(spec.rim, -0.2));
+    x.restore();
+    // crown: bright table flanked by tilted facets
+    F([[-7, -12], [7, -12], [6, -3], [-6, -3]], shade(spec.rim, 0.78));
+    F([[-7, -12], [-6, -3], [-14, -3]], shade(spec.rim, 0.3));
+    F([[7, -12], [14, -3], [6, -3]], shade(spec.rim, 0.5));
+    // pavilion facets fan down to the culet
+    F([[-14, -3], [-5, -3], [0, 13]], shade(spec.rim, -0.34));
+    F([[-5, -3], [5, -3], [0, 13]], shade(spec.rim, 0.18));
+    F([[5, -3], [14, -3], [0, 13]], shade(spec.rim, -0.08));
+    // facet edges catch the light
+    x.strokeStyle = 'rgba(255,255,255,0.55)'; x.lineWidth = 0.9; x.lineJoin = 'round';
+    x.beginPath();
+    x.moveTo(cx2 - 14, cy2 - 3); x.lineTo(cx2 + 14, cy2 - 3);
+    x.moveTo(cx2 - 7, cy2 - 12); x.lineTo(cx2 - 6, cy2 - 3);
+    x.moveTo(cx2 + 7, cy2 - 12); x.lineTo(cx2 + 6, cy2 - 3);
+    x.moveTo(cx2 - 5, cy2 - 3); x.lineTo(cx2, cy2 + 13); x.lineTo(cx2 + 5, cy2 - 3);
+    x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,0.8)'; x.lineWidth = 1.3;
+    x.beginPath();
+    x.moveTo(cx2 - 7, cy2 - 12); x.lineTo(cx2 + 7, cy2 - 12); x.lineTo(cx2 + 14, cy2 - 3);
+    x.lineTo(cx2, cy2 + 13); x.lineTo(cx2 - 14, cy2 - 3); x.closePath();
+    x.stroke();
+    // a pinpoint of caught fire in the table
+    x.fillStyle = 'rgba(255,255,255,0.95)';
+    x.beginPath(); x.arc(cx2 - 3, cy2 - 8, 1.6, 0, 7); x.fill();
+    return c;
+  }
+  TILE_CACHE[ci] = { dirt: dirt(), brick: brick(), steel: steel(), gem: gem(), boulders: [boulder(0), boulder(1), boulder(2), boulder(3)], span: 8 };
   return TILE_CACHE[ci];
 }
 // lighting: dark ambient multiplied over the scene, holes punched by lights
@@ -878,20 +958,51 @@ function draw() {
       ctx.translate(px + TS / 2, py + TS / 2);
       ctx.scale(flip, 1);
       if (falling) {
-        // the loudest sprite on screen: triple smear + hard stretch
-        ctx.globalAlpha = 0.4;
+        // the loudest sprite on screen: hot smear, speed lines, hard stretch
+        ctx.globalAlpha = 0.5;
         ctx.drawImage(spr, -TS / 2, -TS / 2 - 14, TS, TS);
-        ctx.globalAlpha = 0.22;
+        ctx.globalAlpha = 0.3;
         ctx.drawImage(spr, -TS / 2, -TS / 2 - 26, TS, TS);
-        ctx.globalAlpha = 0.1;
-        ctx.drawImage(spr, -TS / 2, -TS / 2 - 38, TS, TS);
+        ctx.globalAlpha = 0.15;
+        ctx.drawImage(spr, -TS / 2, -TS / 2 - 40, TS, TS);
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-9, -TS / 2 - 34); ctx.lineTo(-9, -4);
+        ctx.moveTo(8, -TS / 2 - 26); ctx.lineTo(8, -8);
+        ctx.stroke();
         ctx.globalAlpha = 1;
         ctx.scale(0.88, 1.18);
         ctx.drawImage(spr, -TS / 2, -TS / 2, TS, TS);
+        // white-hot leading edge: this thing is arriving
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = 'rgba(255,235,200,0.28)';
+        ctx.beginPath(); ctx.ellipse(0, 11, 9, 3.5, 0, 0, 7); ctx.fill();
+        ctx.restore();
       } else if (aboutToFall) {
+        // poised over a drop: hot underglow + grit trickling off the edge
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        const wa = 0.3 + 0.22 * Math.sin(G.time * 7 + x * 1.7);
+        const ug = ctx.createRadialGradient(0, TS / 2 + 3, 0, 0, TS / 2 + 3, 24);
+        ug.addColorStop(0, hexA('#ff8c42', wa)); ug.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = ug;
+        ctx.beginPath(); ctx.arc(0, TS / 2 + 3, 24, 0, 7); ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = 'rgba(214,192,160,0.75)';
+        for (let k2 = 0; k2 < 3; k2++) {
+          const fy2 = (G.time * 42 + k2 * 11 + ((x * 13) % 17)) % 24;
+          ctx.fillRect(-7 + k2 * 7, TS / 2 + fy2, 2, 2);
+        }
         ctx.rotate(Math.sin(G.time * 18 + x) * 0.09);
         ctx.drawImage(spr, -TS / 2, -TS / 2, TS, TS);
-      } else ctx.drawImage(spr, -TS / 2, -TS / 2, TS, TS);
+      } else {
+        // grounded tonnage: shadow pools where stone meets floor
+        ctx.fillStyle = 'rgba(0,0,0,0.42)';
+        ctx.beginPath(); ctx.ellipse(0, TS / 2 - 2, 13, 4, 0, 0, 7); ctx.fill();
+        ctx.drawImage(spr, -TS / 2, -TS / 2, TS, TS);
+      }
       ctx.restore();
     }
     else if (c === 'd') drawGem(px, py, spec);
@@ -901,7 +1012,7 @@ function draw() {
     if (c === ' ') {
       // tunnel residue: crumbs left where earth was carved
       const h2 = hash(x, y);
-      ctx.fillStyle = 'rgba(120,100,80,0.18)';
+      ctx.fillStyle = 'rgba(128,108,86,0.22)';
       for (let k2 = 0; k2 < 3; k2++) {
         const hx = (h2 >> (k2 * 5)) & 31, hy = (h2 >> (k2 * 5 + 8)) & 31;
         ctx.fillRect(px + (hx % 28) + 2, py + (hy % 26) + 4, 2, 2);
@@ -910,8 +1021,8 @@ function draw() {
   }
   // carved-earth rim light where dirt faces tunnel
   ctx.save();
-  ctx.strokeStyle = hexA(spec.rim, 0.45);
-  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = hexA(spec.rim, 0.32);
+  ctx.lineWidth = 2;
   ctx.beginPath();
   for (let y = y0; y < y1; y++) for (let x = x0; x < x1; x++) {
     if (G.grid[y][x] !== '.') continue;
@@ -929,6 +1040,18 @@ function draw() {
   if (p.alive || G.dyingT < 0.15) drawOtto(plx, ply, p);
   drawParticles();
   drawPops();
+  // cave air: dust motes drifting through the lamplight
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = '#d8ecff';
+  for (let i = 0; i < 24; i++) {
+    const mx = (i * 211.7 + G.time * (3 + (i % 5) * 1.6) + Math.sin(G.time * 0.6 + i) * 9) % VW;
+    const my = (i * 137.3 + G.time * (2 + (i % 3))) % VH;
+    ctx.globalAlpha = 0.04 + 0.06 * (0.5 + 0.5 * Math.sin(G.time * 1.4 + i * 1.9));
+    const sz = i % 5 === 0 ? 2 : 1.4;
+    ctx.fillRect(G.cam.x + mx, G.cam.y + my, sz, sz);
+  }
+  ctx.restore();
   ctx.restore();
 
   drawLighting(spec, plx, ply);
@@ -951,29 +1074,53 @@ function draw() {
   ctx.restore();
   ctx.drawImage(VIGNETTE, 0, 0, W, H);
 }
-function drawGem(px, py, spec) {
-  const cx = px + TS / 2, cy = py + TS / 2;
-  const pulse = 0.75 + Math.sin(G.time * 5 + px * 0.1) * 0.25;
+function starGlint(x2, y2, r, a) {
+  // a four-point lens star with a diagonal cross — the facet caught the lamp
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 22);
-  g.addColorStop(0, hexA(spec.rim, 0.22 * pulse)); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalAlpha = a;
+  ctx.strokeStyle = '#ffffff'; ctx.lineCap = 'round';
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(x2 - r, y2); ctx.lineTo(x2 + r, y2);
+  ctx.moveTo(x2, y2 - r); ctx.lineTo(x2, y2 + r);
+  ctx.stroke();
+  const d = r * 0.42;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x2 - d, y2 - d); ctx.lineTo(x2 + d, y2 + d);
+  ctx.moveTo(x2 + d, y2 - d); ctx.lineTo(x2 - d, y2 + d);
+  ctx.stroke();
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(x2, y2, 1.4, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function drawGem(px, py, spec) {
+  const cx = px + TS / 2, cy = py + TS / 2;
+  const hh = ((px * 73856093) ^ (py * 19349663)) >>> 0;
+  const ph = (hh % 977) / 977 * Math.PI * 2;
+  const pulse = 0.72 + Math.sin(G.time * 4.2 + ph) * 0.28;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 24);
+  g.addColorStop(0, hexA(spec.rim, 0.28 * pulse)); g.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(cx, cy, 22, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, 24, 0, 7); ctx.fill();
   ctx.restore();
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.rotate(Math.sin(G.time * 2 + py * 0.13) * 0.15);
-  ctx.beginPath();
-  ctx.moveTo(0, -11); ctx.lineTo(8, -3); ctx.lineTo(5, 10); ctx.lineTo(-5, 10); ctx.lineTo(-8, -3); ctx.closePath();
-  const cg = ctx.createLinearGradient(0, -11, 0, 10);
-  cg.addColorStop(0, '#ffffff'); cg.addColorStop(0.35, shade(spec.rim, 0.35)); cg.addColorStop(1, shade(spec.rim, -0.35));
-  ctx.fillStyle = cg;
-  ctx.shadowColor = spec.rim; ctx.shadowBlur = 10;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(-8, -3); ctx.lineTo(8, -3); ctx.moveTo(0, -11); ctx.lineTo(0, 10); ctx.stroke();
+  ctx.rotate(Math.sin(G.time * 2 + ph) * 0.13);
+  ctx.drawImage(tiles(G.cave).gem, -TS / 2, -TS / 2, TS, TS);
+  // facet fire: sparkle points take turns catching the lamp
+  const ANCH = [[-7, -10], [7, -10], [-12, -2], [12, -2], [0, 12], [-3, -7]];
+  for (let s = 0; s < 2; s++) {
+    const gk = Math.sin(G.time * (2.7 + s * 1.4) + ph + s * 2.1);
+    if (gk > 0.45) {
+      const pk = (gk - 0.45) / 0.55;
+      const [ax, ay] = ANCH[(hh + s * 3 + ((G.time * 0.7 + ph) | 0)) % ANCH.length];
+      starGlint(ax, ay + 1, (3 + 4.5 * pk) * (s ? 0.7 : 1), Math.min(1, pk * 1.4));
+    }
+  }
   ctx.restore();
 }
 function drawMagicWall(px, py) {
@@ -1121,10 +1268,13 @@ function drawOtto(px, py, p) {
   ctx.globalCompositeOperation = 'source-over';
   // lean into motion, fill the cell
   ctx.translate(px + TS / 2 + (p.pushT > 0 ? p.dir * 5 : 0), py + TS);
+  // boots on the ground: a contact shadow keeps Otto out of mid-air
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
+  ctx.beginPath(); ctx.ellipse(0, -1.5, 11, 3.5, 0, 0, 7); ctx.fill();
   if (p.pushT > 0) ctx.rotate(p.dir * 0.22);
   else if (p.moving) ctx.rotate(p.dir * 0.08);
   ctx.shadowColor = 'rgba(51,214,255,0.6)'; ctx.shadowBlur = 8;
-  ctx.drawImage(spr, -15, -39, 30, 40);
+  ctx.drawImage(spr, -16, -41, 32, 42);
   ctx.restore();
 }
 function drawParticles() {
@@ -1247,8 +1397,9 @@ function drawMarquee(spec) {
       ctx.fillStyle = Math.sin(G.time * 6) > 0 ? '#3ae374' : shade('#3ae374', 0.4);
       ctx.fillText('EXIT OPEN', 24, 27);
     } else {
+      ctx.drawImage(tiles(G.cave).gem, 18, 8, 20, 20);
       ctx.fillStyle = 'rgba(220,238,255,1)';
-      ctx.fillText(`QUOTA ${Math.max(0, G.quota - G.diamonds)} MORE`, 24, 27);
+      ctx.fillText(`QUOTA ${Math.max(0, G.quota - G.diamonds)} MORE`, 44, 27);
     }
     ctx.letterSpacing = '0px';
   }
@@ -1293,16 +1444,13 @@ function drawHUD(spec) {
   ctx.shadowColor = spec.rim; ctx.shadowBlur = 10;
   ctx.fillText(`${G.diamonds}/${quota}`, 196, LB + 2);
   ctx.restore();
-  // gem icon sits clear of the label
+  // gem icon sits clear of the label — the real jewel, glinting on payday
   ctx.save();
-  ctx.translate(172, LB - 7);
-  ctx.scale(0.75, 0.75);
-  ctx.beginPath();
-  ctx.moveTo(0, -11); ctx.lineTo(8, -3); ctx.lineTo(5, 10); ctx.lineTo(-5, 10); ctx.lineTo(-8, -3); ctx.closePath();
-  ctx.fillStyle = shade(spec.rim, 0.2);
   ctx.shadowColor = spec.rim; ctx.shadowBlur = 8;
-  ctx.fill();
+  ctx.drawImage(tiles(G.cave).gem, 158, LB - 21, 26, 26);
   ctx.restore();
+  const hudGk = Math.sin(G.time * 2.6);
+  if (hudGk > 0.35) starGlint(166, LB - 14, 3 + 3 * (hudGk - 0.35) / 0.65, (hudGk - 0.35) / 0.65);
   ctx.font = '700 11px Verdana, sans-serif';
   ctx.letterSpacing = '2px';
   ctx.fillStyle = 'rgba(190,218,245,0.85)';
@@ -1418,26 +1566,26 @@ function drawTitle(spec) {
   // carved pocket where Otto stands
   ctx.fillStyle = '#100c12';
   ctx.fillRect(W / 2 - 160, groundY, 320, TS * 2);
-  // buried gems glinting in the dirt
+  // buried gems glinting in the dirt — the real jewels, catching fire in turn
   srand(31337);
   for (let i = 0; i < 8; i++) {
     const gx = rng(60, W - 60), gy = rng(groundY + 8, H - 40);
     if (Math.abs(gx - W / 2) < 190 && gy < groundY + TS * 2 + 8) continue;
     ctx.save();
-    ctx.translate(gx, gy);
-    ctx.scale(0.7, 0.7);
-    ctx.beginPath();
-    ctx.moveTo(0, -11); ctx.lineTo(8, -3); ctx.lineTo(5, 10); ctx.lineTo(-5, 10); ctx.lineTo(-8, -3); ctx.closePath();
-    ctx.fillStyle = shade('#33d6ff', 0.25);
     ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 10 + Math.sin(G.time * 4 + i) * 4;
-    ctx.fill();
+    ctx.drawImage(T.gem, gx - 12, gy - 12, 24, 24);
     ctx.restore();
+    const tgk = Math.sin(G.time * 3 + i * 2.3);
+    if (tgk > 0.55) starGlint(gx - 3, gy - 6, 3 + 4 * (tgk - 0.55) / 0.45, (tgk - 0.55) / 0.45);
   }
-  // a boulder mid-fall over the pocket
+  // a boulder mid-fall over the pocket, its shadow rushing up to meet it
   const bobY = 425 + ((G.time * 130) % 90);
-  ctx.globalAlpha = 0.35;
+  const prox = ((G.time * 130) % 90) / 90;
+  ctx.fillStyle = `rgba(0,0,0,${0.16 + 0.3 * prox})`;
+  ctx.beginPath(); ctx.ellipse(W / 2 + 96 + TS * 0.7, groundY + TS * 2 - 4, 14 + 9 * prox, 4.5, 0, 0, 7); ctx.fill();
+  ctx.globalAlpha = 0.45;
   ctx.drawImage(T.boulders[1], W / 2 + 96, bobY - 16, TS * 1.4, TS * 1.4);
-  ctx.globalAlpha = 0.18;
+  ctx.globalAlpha = 0.22;
   ctx.drawImage(T.boulders[1], W / 2 + 96, bobY - 30, TS * 1.4, TS * 1.4);
   ctx.globalAlpha = 1;
   ctx.drawImage(T.boulders[1], W / 2 + 96, bobY, TS * 1.4, TS * 1.4);
@@ -1449,6 +1597,8 @@ function drawTitle(spec) {
   ctx.fillStyle = lg;
   ctx.beginPath(); ctx.arc(W / 2 + 40, groundY + 34, 150, 0, 7); ctx.fill();
   ctx.restore();
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath(); ctx.ellipse(W / 2, groundY + 88, 34, 8, 0, 0, 7); ctx.fill();
   ctx.drawImage(SPR.walk1, W / 2 - 48, groundY - 36, 96, 128);
   // lockup band
   const by2 = 120, bh = 290;
@@ -1464,17 +1614,28 @@ function drawTitle(spec) {
   const ly = 246;
   ctx.font = '900 96px "Arial Black", Arial, sans-serif';
   ctx.letterSpacing = '10px';
-  // neon done right: tight halo, then a hot core
+  // neon done right: tight halo, then a hot gradient core cooling toward the cave
   ctx.save();
-  ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 16;
-  ctx.fillStyle = '#7fdcff'; ctx.fillText('NEON DASH', W / 2, ly);
-  ctx.shadowBlur = 4;
-  ctx.fillStyle = '#ffffff'; ctx.fillText('NEON DASH', W / 2, ly);
+  ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 22;
+  ctx.fillStyle = '#54c8ea'; ctx.fillText('NEON DASH', W / 2, ly);
+  ctx.shadowBlur = 5;
+  const wm = ctx.createLinearGradient(0, ly - 74, 0, ly + 8);
+  wm.addColorStop(0, '#ffffff'); wm.addColorStop(0.55, '#d6f6ff'); wm.addColorStop(1, '#5ddcff');
+  ctx.fillStyle = wm; ctx.fillText('NEON DASH', W / 2, ly);
   ctx.restore();
   ctx.letterSpacing = '5px';
   ctx.font = '600 17px Verdana, sans-serif';
   ctx.fillStyle = '#7fb0d0';
   ctx.fillText('A TRIBUTE TO BOULDER DASH', W / 2, ly + 50);
+  // the subtitle wears the currency: faceted gems set at each end
+  for (const gs of [-1, 1]) {
+    ctx.save();
+    ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 10;
+    ctx.drawImage(T.gem, W / 2 + gs * 296 - 14, ly + 30, 28, 28);
+    ctx.restore();
+    const wgk = Math.sin(G.time * 2.4 + (gs + 1) * 1.3);
+    if (wgk > 0.3) starGlint(W / 2 + gs * 296 - 3, ly + 38, 3.5 + 4 * (wgk - 0.3) / 0.7, (wgk - 0.3) / 0.7);
+  }
   const a = (Math.sin(G.time * 4) + 1) / 2 * 0.45 + 0.55;
   ctx.globalAlpha = a;
   ctx.font = '900 24px "Arial Black", Arial, sans-serif';
