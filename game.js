@@ -256,6 +256,7 @@ function buildCave(ci) {
   G.exitOpen = false;
   G.caveTime = spec.time;
   G.tickAcc = 0;
+  if (G.moves) G.moves.length = 0;       // stale ledger must not offset the fresh grid
   G.dyingT = 0;
   G.mwActive = 0;                        // magic wall milling window
   G.gemsTotal = 0;
@@ -1007,7 +1008,7 @@ function draw() {
       const m = MV.get(y * CW + x);
       ctx.save();
       ctx.translate(px + TS / 2 + (m ? m.dx * TS * (1 - lerp) : 0), py + TS / 2 + (m ? m.dy * TS * (1 - lerp) : 0));
-      if (m && m.dx) ctx.rotate(-m.dx * (1 - lerp) * 1.1); // rolling stone turns as it rolls
+      if (m && m.dx) ctx.rotate(m.dx * (1 - lerp) * 1.1); // rolling stone turns as it rolls (right roll = clockwise)
       ctx.scale(flip, 1);
       if (falling) {
         // the loudest sprite on screen: hot smear, speed lines, hard stretch
