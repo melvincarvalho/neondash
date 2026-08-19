@@ -897,7 +897,7 @@ function drawLighting(spec, plx, ply) {
     else if (c === 'X' && G.exitOpen) light(x * TS + TS / 2, y * TS + TS / 2, 200, spec.rim, 0.9);
     else if (c === 'M' && G.mwState === 1) light(x * TS + TS / 2, y * TS + TS / 2, 90, '#b48cff', 0.7);
   }
-  for (const e of G.enemies) light(e.x * TS + TS / 2, e.y * TS + TS / 2, 110, e.type === 'f' ? '#ff4545' : '#ff2ee6', 0.55);
+  for (const e of G.enemies) light(e.x * TS + TS / 2, e.y * TS + TS / 2, 110, e.type === 'f' ? '#ff4545' : '#ff3d8f', 0.55);
   for (const pt of G.parts) if (pt.kind === 'flash' || pt.kind === 'fire') light(pt.x, pt.y, pt.r * 2.0, '#ffd9a0', 0.55);
   ctx.save();
   ctx.beginPath(); ctx.rect(0, MQ, VW, VH); ctx.clip();
