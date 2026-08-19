@@ -270,9 +270,9 @@ function newGame(seed, attract) {
     mode: 'play', modeT: 0, time: 0, attract: !!attract, showTitle: !!attract,
     score: 0, hiScore: Number(localStorage.getItem('neondash_hi') || 15000),
     lives: 3, deaths: 0, cavesCleared: 0,
-    parts: [], pops: [],
+    parts: [], pops: [], moves: [],
     cam: { x: 0, y: 0 },
-    flash: 0, shake: 0, hintT: 8,
+    flash: 0, shake: 0, hintT: 8, lastGemAt: -9, exitOpenAt: -9,
   };
   buildCave(0);
 }
@@ -312,6 +312,7 @@ function explode(cx, cy, resultChar) {
 }
 function tick() {
   const g = G.grid, p = G.p;
+  G.moves = [];   // display ledger: where things arrived this tick, and from where
   // explosion cells resolve to their result
   if (G.expl.size) {
     for (const [key, res] of G.expl) {
@@ -333,6 +334,7 @@ function tick() {
       moved[y + 1][x] = 1;
       G.fall[y + 1][x] = 1;
       G.fall[y][x] = 0;
+      G.moves.push({ x, y: y + 1, dx: 0, dy: -1 });
     } else if (G.fall[y][x] && (below === 'P' || below === 'f' || below === 'b')) {
       // a falling object crushes what it lands on
       const victim = below;
@@ -355,6 +357,7 @@ function tick() {
             g[y + 2][x] = conv;
             G.fall[y + 2][x] = 1;
             moved[y + 2][x] = 1;
+            G.moves.push({ x, y: y + 2, dx: 0, dy: -1 });
             if (conv === 'd') G.gemsTotal++;
           }
           if (nearCam(x, y)) { SFX.gem(); addSparkle(x * TS + TS / 2, (y + 1) * TS + TS / 2, '#b48cff'); }
@@ -366,11 +369,13 @@ function tick() {
         g[y][x] = ' '; g[y][x - 1] = c;
         moved[y][x - 1] = 1;
         G.fall[y][x - 1] = 1; G.fall[y][x] = 0;
+        G.moves.push({ x: x - 1, y, dx: 1, dy: 0 });
         if (nearCam(x, y)) SFX.roll();
       } else if (cellAt(x + 1, y) === ' ' && cellAt(x + 1, y + 1) === ' ') {
         g[y][x] = ' '; g[y][x + 1] = c;
         moved[y][x + 1] = 1;
         G.fall[y][x + 1] = 1; G.fall[y][x] = 0;
+        G.moves.push({ x: x + 1, y, dx: -1, dy: 0 });
         if (nearCam(x, y)) SFX.roll();
       } else {
         if (G.fall[y][x] && nearCam(x, y)) { SFX.thud(); landDust(x, y); G.shake = Math.min(G.shake + 3, 8); }
@@ -411,6 +416,7 @@ function tick() {
       p.pushT++;
       if (p.pushT >= 2) {                    // authentic push delay
         g[ny][nx + dx] = 'r';
+        G.moves.push({ x: nx + dx, y: ny, dx: -dx, dy: 0 });
         g[ny][nx] = 'P'; g[p.y][p.x] = ' ';
         p.x = nx; p.moving = true;
         p.pushT = 0;
@@ -425,6 +431,7 @@ function tick() {
   // enemies: wall-followers that detonate on contact
   for (const e of G.enemies.slice()) {
     if (!G.enemies.includes(e)) continue;
+    e.px = e.x; e.py = e.y;
     const D4 = [[1, 0], [0, 1], [-1, 0], [0, -1]];
     const pref = e.type === 'f'
       ? [(e.dir + 3) % 4, e.dir, (e.dir + 1) % 4, (e.dir + 2) % 4]     // firefly favours left
@@ -462,10 +469,12 @@ function collectGem(x, y) {
   G.score += val;
   if (G.score > G.hiScore) { G.hiScore = G.score; if (!G.attract) try { localStorage.setItem('neondash_hi', String(G.hiScore)); } catch (e) {} }
   (G.exitOpen ? SFX.gemBonus : SFX.gem)();
+  G.lastGemAt = G.time;
   addSparkle(x * TS + TS / 2, y * TS + TS / 2, spec.rim);
   addPop(x * TS + TS / 2, y * TS + 6, `+${val}`, '#ffd76a');
   if (!G.exitOpen && G.diamonds >= G.quota) {
     G.exitOpen = true;
+    G.exitOpenAt = G.time;
     SFX.exitOpen();
     G.flash = -0.22;
   }
@@ -658,7 +667,7 @@ function tickFX(dt) {
     else if (pt.kind === 'spark' || pt.kind === 'dust') { pt.x += pt.vx * dt; pt.y += pt.vy * dt; pt.vx *= (1 - 3 * dt); pt.vy *= (1 - 3 * dt); if (pt.kind === 'dust') pt.vy += 150 * dt; }
     else if (pt.kind === 'ring') pt.r += 420 * dt;
   }
-  for (let i = G.pops.length - 1; i >= 0; i--) { const o = G.pops[i]; o.t += dt; o.y -= 34 * dt; if (o.t >= o.life) G.pops.splice(i, 1); }
+  for (let i = G.pops.length - 1; i >= 0; i--) { const o = G.pops[i]; o.t += dt; o.y -= 62 * Math.max(0.2, 1 - o.t / o.life) * dt; if (o.t >= o.life) G.pops.splice(i, 1); }
   G.flash = G.flash > 0 ? Math.max(0, G.flash - 2.4 * dt) : Math.min(0, G.flash + 1.4 * dt);
   G.shake = Math.max(0, G.shake - 30 * dt);
 }
@@ -887,7 +896,8 @@ function drawLighting(spec, plx, ply) {
     lctx.beginPath(); lctx.arc(lx, ly, r * s, 0, 7); lctx.fill();
   };
   const panic = G.mode === 'play' && G.caveTime < 15;
-  const lampR = panic ? 300 * (0.82 + 0.09 * Math.sin(G.time * 11) + 0.05 * Math.sin(G.time * 23)) : 300;
+  const breathe = 0.985 + 0.012 * Math.sin(G.time * 9) + 0.007 * Math.sin(G.time * 23);
+  const lampR = 300 * breathe * (panic ? 0.84 + 0.09 * Math.sin(G.time * 11) : 1);
   light(plx + TS / 2, ply + TS / 2, lampR, '#ffe9c8', 1.0);   // Otto's lamp
   const x0 = clamp((G.cam.x / TS | 0) - 1, 0, CW), x1 = clamp(((G.cam.x + VW) / TS | 0) + 2, 0, CW);
   const y0 = clamp((G.cam.y / TS | 0) - 1, 0, CH), y1 = clamp(((G.cam.y + VH) / TS | 0) + 2, 0, CH);
@@ -904,6 +914,23 @@ function drawLighting(spec, plx, ply) {
   ctx.globalCompositeOperation = 'multiply';
   ctx.drawImage(lightC, 0, MQ, VW, VH);
   ctx.restore();
+  // exit-open one-shot: two gold rings sweep out from the doorway
+  const ek = G.time - G.exitOpenAt;
+  if (G.exitOpen && ek >= 0 && ek < 0.9) {
+    const [exX, exY] = CAVES[G.cave].exit;
+    const rx = exX * TS + TS / 2 - G.cam.x, ry = exY * TS + TS / 2 - G.cam.y + MQ;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, MQ, VW, VH); ctx.clip();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const [spd, del] of [[340, 0], [340, 0.14]]) {
+      const t2 = ek - del;
+      if (t2 < 0) continue;
+      ctx.strokeStyle = `rgba(255,215,106,${(0.75 * (1 - ek / 0.9)).toFixed(3)})`;
+      ctx.lineWidth = 3.5 - ek * 2.5;
+      ctx.beginPath(); ctx.arc(rx, ry, 14 + t2 * spd, 0, 7); ctx.stroke();
+    }
+    ctx.restore();
+  }
 }
 const VIGNETTE = (() => {
   const [c, x] = offCanvas(W, H);
@@ -918,6 +945,8 @@ function draw() {
   const spec = CAVES[G.cave], T = tiles(G.cave), p = G.p;
   if (G.showTitle) { drawTitle(spec); return; }
   const lerp = clamp(G.tickAcc / TICK, 0, 1);
+  const MV = new Map();
+  if (G.moves) for (const m of G.moves) MV.set(m.y * CW + m.x, m);
   const plx = (p.px + (p.x - p.px) * lerp) * TS, ply = (p.py + (p.y - p.py) * lerp) * TS;
   const txc = clamp(plx + TS / 2 - VW / 2, 0, WORLD_W - VW);
   const tyc = clamp(ply + TS / 2 - VH / 2, 0, WORLD_H - VH);
@@ -975,8 +1004,10 @@ function draw() {
       const aboutToFall = !falling && cellAt(x, y + 1) === ' ';
       const spr = T.boulders[hash(x, y * 7) & 3];
       const flip = (hash(x * 3, y) & 4) ? -1 : 1;
+      const m = MV.get(y * CW + x);
       ctx.save();
-      ctx.translate(px + TS / 2, py + TS / 2);
+      ctx.translate(px + TS / 2 + (m ? m.dx * TS * (1 - lerp) : 0), py + TS / 2 + (m ? m.dy * TS * (1 - lerp) : 0));
+      if (m && m.dx) ctx.rotate(-m.dx * (1 - lerp) * 1.1); // rolling stone turns as it rolls
       ctx.scale(flip, 1);
       if (falling) {
         // the loudest sprite on screen: hot smear, speed lines, hard stretch
@@ -1031,7 +1062,11 @@ function draw() {
       }
       ctx.restore();
     }
-    else if (c === 'd') { pocket(px, py, x, y); drawGem(px, py, spec); }
+    else if (c === 'd') {
+      pocket(px, py, x, y);
+      const mg = MV.get(y * CW + x);
+      drawGem(px + (mg ? mg.dx * TS * (1 - lerp) : 0), py + (mg ? mg.dy * TS * (1 - lerp) : 0), spec);
+    }
     else if (c === 'M') drawMagicWall(px, py);
     else if (c === 'X') drawExit(px, py, spec);
     else if (c === 'e') { /* blast handled by particles */ }
@@ -1236,8 +1271,11 @@ function drawExitArrow(spec) {
   ctx.restore();
 }
 function drawEnemy(e) {
-  // kill colors are reserved: firefly red, butterfly magenta — no cave uses them
-  const ex = e.x * TS + TS / 2, ey = e.y * TS + TS / 2;
+  // kill colors are reserved: firefly red, butterfly rose — no cave uses them
+  const lp = clamp(G.tickAcc / TICK, 0, 1);
+  const bx2 = e.px === undefined ? e.x : e.px + (e.x - e.px) * lp;
+  const by2 = e.py === undefined ? e.y : e.py + (e.y - e.py) * lp;
+  const ex = bx2 * TS + TS / 2, ey = by2 * TS + TS / 2;
   const KILLF = '#ff4545', KILLB = '#ff3d8f';
   ctx.save();
   ctx.translate(ex, ey);
@@ -1302,12 +1340,12 @@ function drawOtto(px, py, p) {
   // helmet lamp
   ctx.globalCompositeOperation = 'lighter';
   const lg = ctx.createRadialGradient(px + TS / 2, py + 10, 0, px + TS / 2 + p.dir * 26, py + 12, 52);
-  lg.addColorStop(0, 'rgba(255,240,180,0.24)'); lg.addColorStop(1, 'rgba(255,240,180,0)');
+  lg.addColorStop(0, `rgba(255,240,180,${(0.21 + 0.045 * Math.sin(G.time * 13)).toFixed(3)})`); lg.addColorStop(1, 'rgba(255,240,180,0)');
   ctx.fillStyle = lg;
   ctx.beginPath(); ctx.arc(px + TS / 2 + p.dir * 22, py + 12, 50, 0, 7); ctx.fill();
   ctx.globalCompositeOperation = 'source-over';
   // lean into motion, fill the cell
-  ctx.translate(px + TS / 2 + (p.pushT > 0 ? p.dir * 5 : 0), py + TS);
+  ctx.translate(px + TS / 2 + (p.pushT > 0 ? p.dir * 5 : 0), py + TS + (!p.moving && p.pushT <= 0 ? Math.sin(G.time * 2.4) * 1.2 : 0));
   // boots on the ground: a contact shadow keeps Otto out of mid-air
   ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.beginPath(); ctx.ellipse(0, -1.5, 11, 3.5, 0, 0, 7); ctx.fill();
@@ -1478,11 +1516,14 @@ function drawHUD(spec) {
   // zone 1: diamonds
   label('DIAMONDS', 32);
   const quota = G.quota;
+  const pk = clamp(1 - (G.time - G.lastGemAt) / 0.3, 0, 1);
   ctx.font = `800 26px ${MONO}`;
   ctx.fillStyle = G.exitOpen ? '#ffd76a' : '#ffffff';
   ctx.save();
-  ctx.shadowColor = spec.rim; ctx.shadowBlur = 10;
-  ctx.fillText(`${G.diamonds}/${quota}`, 196, LB + 2);
+  ctx.shadowColor = spec.rim; ctx.shadowBlur = 10 + 14 * pk;
+  ctx.translate(196, LB + 2);
+  ctx.scale(1 + 0.3 * pk * pk, 1 + 0.3 * pk * pk);
+  ctx.fillText(`${G.diamonds}/${quota}`, 0, 0);
   ctx.restore();
   // gem icon sits clear of the label — the real jewel, glinting on payday
   ctx.save();
@@ -1571,6 +1612,10 @@ function drawHUD(spec) {
 }
 function banner(title, color, sub) {
   ctx.save();
+  const bt = clamp((G.modeT || 1) / 0.32, 0, 1);
+  const beas = 1 - Math.pow(1 - bt, 3);
+  ctx.globalAlpha = beas;
+  ctx.translate(0, (1 - beas) * -36);
   const by = H / 2 - 78, bh = 140;
   ctx.fillStyle = '#120c06';
   ctx.fillRect(0, by, W, bh);
@@ -1646,7 +1691,15 @@ function drawTitle(spec) {
   ctx.restore();
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.beginPath(); ctx.ellipse(W / 2, groundY + 108, 34, 8, 0, 0, 7); ctx.fill();
-  ctx.drawImage(SPR.walk1, W / 2 - 48, groundY - 16, 96, 128);
+  ctx.drawImage(SPR.walk1, W / 2 - 48, groundY - 16 + Math.sin(G.time * 2.2) * 1.6, 96, 128);
+  // dust motes drifting through the lantern pool
+  for (let i = 0; i < 6; i++) {
+    const mph = i * 1.9;
+    const mx = W / 2 + Math.sin(G.time * 0.35 + mph) * (70 + i * 22);
+    const my = groundY + 26 - ((G.time * (7 + i * 2.4) + i * 37) % 70);
+    ctx.fillStyle = `rgba(255,226,170,${(0.16 + 0.1 * Math.sin(G.time * 2 + mph)).toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(mx, my, 1.4 + (i % 3) * 0.5, 0, 7); ctx.fill();
+  }
   // lockup band
   const by2 = 120, bh = 290;
   ctx.fillStyle = 'rgba(18,12,6,0.93)';
@@ -1822,6 +1875,37 @@ function runShot(name, f) {
     snapCam();
     G.tickAcc = 0;
     for (let i = 0; i < (f | 0); i++) tick();
+  } else if (name === 'anim') {
+    // quarter-tick motion strips: &s=fall|enemy|collect|exit, &f=N sub-frames
+    const sc = q.get('s') || 'fall';
+    if (sc === 'fall') {
+      const g = G.grid;
+      for (let y = 8; y <= 14; y++) for (let x = 18; x <= 26; x++) g[y][x] = ' ';
+      g[14][22] = 'r';
+      g[10][22] = 'r'; G.fall[10][22] = 1;
+      g[15][21] = 'S'; g[15][22] = 'S'; g[15][23] = 'S';
+      G.grid[G.p.y][G.p.x] = ' ';
+      teleportP(19, 14);
+    } else if (sc === 'enemy') {
+      buildCave(1);
+      G.grid[G.p.y][G.p.x] = ' ';
+      teleportP(16, 7);
+    } else if (sc === 'collect') {
+      G.bot = true;
+      stepUntil(() => G.diamonds >= 1, 120 * 40);
+      G.bot = false;
+    } else if (sc === 'exit') {
+      const [exX2, exY2] = CAVES[0].exit;
+      const g2 = G.grid;
+      for (let xx = exX2 - 4; xx < exX2; xx++) g2[exY2][xx] = ' ';
+      G.grid[G.p.y][G.p.x] = ' ';
+      teleportP(exX2 - 4, exY2);
+      G.diamonds = G.quota - 1;
+      collectGem(exX2 - 2, exY2);
+    }
+    snapCam();
+    G.tickAcc = 0;
+    for (let i = 0; i < (f | 0); i++) sim(0.03125);
   } else if (name === 'crushkill') {
     // a boulder crushes a firefly: the 3x3 blast in full
     buildCave(1);
