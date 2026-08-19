@@ -21,9 +21,10 @@
 <meta name="twitter:description" content="Otto returns. Dig the caves, dodge the boulders, take every diamond. Zero assets — all code.">
 <meta name="twitter:image" content="https://melvincarvalho.github.io/neondash/og.png">
 <style>
-  html,body{margin:0;height:100%;background:#060409;overflow:hidden}
+  html,body{margin:0;height:100%;background:#060409;overflow:hidden;overscroll-behavior:none}
   body{display:flex;align-items:center;justify-content:center}
-  canvas{max-width:100vw;max-height:100vh;aspect-ratio:16/9;display:block}
+  canvas{max-width:100vw;max-height:100vh;max-height:100dvh;aspect-ratio:16/9;display:block;
+    touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 </style>
 </head>
 <body>

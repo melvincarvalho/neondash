@@ -38,6 +38,12 @@ function shade(hex, f) {
 }
 function offCanvas(w, h) { const c = document.createElement('canvas'); c.width = w * 2; c.height = h * 2; const x = c.getContext('2d'); x.scale(2, 2); return [c, x]; }
 const MONO = '"Courier New", monospace';
+const IS_TOUCH = (window.matchMedia && matchMedia('(pointer: coarse)').matches)
+  || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const START_KEY = IS_TOUCH ? 'TAP' : 'SPACE';
+const MOVE_HINT = IS_TOUCH
+  ? 'MOVE — TOUCH & DRAG, HOLD TO KEEP MOVING · DIG BY WALKING'
+  : 'MOVE — WASD / ARROWS · DIG BY WALKING · PUSH BOULDERS SIDEWAYS';
 
 // ---------- audio ----------
 let AUDIO_ON = true, actx = null, master = null;
@@ -932,8 +938,8 @@ function draw() {
 
   if (G.mode === 'clear') banner(`${spec.name} CLEAR`, spec.rim, `TIME BONUS +${G.clearBonus}`);
   if (G.mode === 'respawn') banner('OTTO DOWN', '#ff3b5c', `${Math.max(0, G.lives)} LIVES REMAIN`);
-  if (G.mode === 'over') banner('GAME OVER', '#ff3b5c', `FINAL SCORE ${G.score.toLocaleString('en-US')} — SPACE TO RETRY`);
-  if (G.mode === 'win') banner('ALL CAVES CLEAR', '#ffd12a', `OTTO ESCAPES WITH ${G.score.toLocaleString('en-US')} — SPACE TO PLAY AGAIN`);
+  if (G.mode === 'over') banner('GAME OVER', '#ff3b5c', `FINAL SCORE ${G.score.toLocaleString('en-US')} — ${START_KEY} TO RETRY`);
+  if (G.mode === 'win') banner('ALL CAVES CLEAR', '#ffd12a', `OTTO ESCAPES WITH ${G.score.toLocaleString('en-US')} — ${START_KEY} TO PLAY AGAIN`);
 
   if (G.flash !== 0) {
     ctx.save();
@@ -1253,7 +1259,7 @@ function drawMarquee(spec) {
     ctx.font = '600 10px Verdana, sans-serif';
     ctx.letterSpacing = '1px';
     ctx.fillStyle = 'rgba(200,225,250,0.9)';
-    ctx.fillText('MOVE — WASD / ARROWS · DIG BY WALKING · PUSH BOULDERS SIDEWAYS', W - 20, 27);
+    ctx.fillText(MOVE_HINT, W - 20, 27);
     ctx.letterSpacing = '0px';
     ctx.restore();
   }
@@ -1475,14 +1481,18 @@ function drawTitle(spec) {
   ctx.letterSpacing = '3px';
   ctx.fillStyle = '#ffffff';
   ctx.shadowColor = '#33d6ff'; ctx.shadowBlur = 12;
-  ctx.fillText('PRESS SPACE TO START', W / 2, ly + 118);
+  ctx.fillText(IS_TOUCH ? 'TAP TO START' : 'PRESS SPACE TO START', W / 2, ly + 118);
   ctx.globalAlpha = 1; ctx.shadowBlur = 0;
   ctx.font = '600 13px Verdana, sans-serif';
   ctx.letterSpacing = '3px';
   ctx.fillStyle = 'rgba(180,210,235,0.95)';
   ctx.fillText('OTTO RETURNS — DIG THE CAVES, DODGE THE BOULDERS, TAKE EVERY DIAMOND', W / 2, 452);
   ctx.fillStyle = 'rgba(160,190,220,0.85)';
-  ctx.fillText('MOVE — WASD / ARROWS · DIG BY WALKING · PUSH BOULDERS SIDEWAYS', W / 2, 480);
+  ctx.fillText(MOVE_HINT, W / 2, 480);
+  if (IS_TOUCH && window.innerHeight > window.innerWidth) {
+    ctx.fillStyle = '#ffd12a';
+    ctx.fillText('BEST IN LANDSCAPE — ROTATE YOUR PHONE', W / 2, ly + 150);
+  }
   ctx.letterSpacing = '0px';
   ctx.restore();
   ctx.drawImage(VIGNETTE, 0, 0, W, H);
@@ -1502,11 +1512,44 @@ window.addEventListener('keyup', e => {
   const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   keys[k] = false;
 });
-canvas.addEventListener('mousedown', () => {
+function tapStart() {
   audio();
   if (G.showTitle) { G.showTitle = false; newGame((Math.random() * 1e9) >>> 0, false); return; }
   if ((G.mode === 'over' || G.mode === 'win') && G.modeT > 0.8) newGame((Math.random() * 1e9) >>> 0, false);
-});
+}
+canvas.addEventListener('mousedown', tapStart);
+// touch: drag anywhere on the canvas is a virtual joystick — hold to keep
+// moving, feeding the same keys the keyboard path reads
+const TOUCH_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+let touchId = null, tAnchorX = 0, tAnchorY = 0;
+function clearTouchKeys() { for (const k of TOUCH_KEYS) keys[k] = false; }
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  tapStart();
+  if (touchId !== null) return;
+  const t = e.changedTouches[0];
+  touchId = t.identifier; tAnchorX = t.clientX; tAnchorY = t.clientY;
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (t.identifier !== touchId) continue;
+    const dx = t.clientX - tAnchorX, dy = t.clientY - tAnchorY;
+    const DEAD = 14, REACH = 32;
+    clearTouchKeys();
+    if (Math.abs(dx) >= DEAD || Math.abs(dy) >= DEAD)
+      keys[Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'ArrowLeft' : 'ArrowRight') : (dy < 0 ? 'ArrowUp' : 'ArrowDown')] = true;
+    // the anchor trails the finger so reversing direction is immediate
+    const m = Math.hypot(dx, dy);
+    if (m > REACH) { tAnchorX = t.clientX - dx / m * REACH; tAnchorY = t.clientY - dy / m * REACH; }
+  }
+}, { passive: false });
+function touchEnd(e) {
+  e.preventDefault();
+  for (const t of e.changedTouches) if (t.identifier === touchId) { touchId = null; clearTouchKeys(); }
+}
+canvas.addEventListener('touchend', touchEnd, { passive: false });
+canvas.addEventListener('touchcancel', touchEnd, { passive: false });
 
 // ---------- main loop ----------
 let last = 0, acc = 0;
